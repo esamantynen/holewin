@@ -227,15 +227,18 @@
       const a = scores.filter(s => s === 'A').length;
       const b = scores.filter(s => s === 'B').length;
       const left = totalHoles - scores.length;
-      let finalText = "";
+      
+      let finalText = `${playerA} vs ${playerB} ${a}–${b}`;
 
-      if (a === b) finalText = t.draw;
-      else {
-        const winner = a > b ? playerA : playerB;
-        const diff = Math.abs(a - b);
-        finalText = `${winner} ${t.won} ${diff} & ${left}`;
-      }
+        if (a === b) {
+          finalText += ` – ${t.draw}`;
+        } else {
+          const winner = a > b ? playerA : playerB;
+          const diff = Math.abs(a - b);
+          finalText += ` – ${winner} ${t.won} ${diff} & ${left}`;
+        }
 
+    
       document.getElementById("finalResult").innerText = finalText;
 
       const list = document.getElementById("details");
