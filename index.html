@@ -17,9 +17,13 @@
     }
     input, select, button {
       width: 100%;
-      padding: 0.7em;
+      max-width: 100%;
+      box-sizing: border-box;
+      padding: 0.6em 0.8em;
       margin-top: 0.5em;
       font-size: 1em;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
     button {
       background: #2e7d32;
@@ -60,6 +64,13 @@
     .lang-menu select {
       padding: 4px;
       font-size: 0.9em;
+    }
+
+    @media screen and (max-width: 480px) {
+      input, select, button {
+        font-size: 0.95em;
+        padding: 0.5em;
+      }
     }
   </style>
 </head>
@@ -110,13 +121,9 @@
   <div id="result" style="display:none;">
     <h2 id="finalResult"></h2>
     <ul id="details"></ul>
-    <label id="emailLabel">Sähköposti: <input id="email"></label>
-    <button id="sendBtn" onclick="sendEmail()">Lähetä tulos sähköpostiin</button>
   </div>
 
   <script>
-    const backendURL = "https://us-central1-holewin-b7608.cloudfunctions.net/sendMatchEmail";
-
     let lang = 'fi';
     const translations = {
       fi: {
@@ -125,8 +132,6 @@
         start: "Aloita peli",
         holes: "Väyliä",
         tie: "Tasapeli",
-        email: "Sähköposti",
-        send: "Lähetä tulos sähköpostiin",
         hole: "Väylä",
         result: "Tulokset",
         draw: "Peli päättyi tasan",
@@ -140,8 +145,6 @@
         start: "Start Game",
         holes: "Holes",
         tie: "Tie",
-        email: "Email",
-        send: "Send results by email",
         hole: "Hole",
         result: "Results",
         draw: "Match ended in a draw",
@@ -162,8 +165,6 @@
       document.getElementById("labelHoles").childNodes[0].nodeValue = t.holes + ": ";
       document.getElementById("startButton").innerText = t.start;
       document.getElementById("btnT").innerText = t.tie;
-      document.getElementById("emailLabel").childNodes[0].nodeValue = t.email + ": ";
-      document.getElementById("sendBtn").innerText = t.send;
       updateHole();
     }
 
@@ -245,30 +246,6 @@
       });
     }
 
-    function sendEmail() {
-      const toEmail = document.getElementById("email").value;
-      const resultText = document.getElementById("finalResult").innerText;
-      const holeDetails = scores.map((s, i) =>
-        `${translations[lang].hole} ${i + 1}: ${s === 'T' ? translations[lang].tie : s === 'A' ? playerA : playerB}`
-      ).join('\n');
-
-      fetch(backendURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to_email: toEmail,
-          player_a: playerA,
-          player_b: playerB,
-          result_text: resultText,
-          hole_details: holeDetails
-        })
-      })
-        .then(res => res.ok ? res.text() : Promise.reject("Email error"))
-        .then(msg => alert("✅ " + msg))
-        .catch(err => alert("❌ Lähetys epäonnistui: " + err));
-    }
-
-    // Aseta oletuskieli
     setLanguage('fi');
   </script>
 </body>
