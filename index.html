@@ -103,7 +103,7 @@
   <label id="labelHoles">Väyliä:
     <select id="holes">
       <option value="9">9</option>
-      <option value="18">18</option>
+      <option value="18" selected>18</option>
     </select>
   </label>
   <button id="startButton" onclick="startGame()">Aloita peli</button>
@@ -127,8 +127,8 @@
     let lang = 'fi';
     const translations = {
       fi: {
-        playerA: "Pelaaja A",
-        playerB: "Pelaaja B",
+        playerA: "Pelaaja 1",
+        playerB: "Pelaaja 2",
         start: "Aloita peli",
         holes: "Väyliä",
         tie: "Tasapeli",
@@ -140,8 +140,8 @@
         holesLeft: "väylää jäljellä"
       },
       en: {
-        playerA: "Player A",
-        playerB: "Player B",
+        playerA: "Player 1",
+        playerB: "Player 2",
         start: "Start Game",
         holes: "Holes",
         tie: "Tie",
@@ -154,7 +154,7 @@
       }
     };
 
-    let scores = [], currentHole = 1, totalHoles = 9;
+    let scores = [], currentHole = 1, totalHoles = 18;
     let playerA = "", playerB = "";
 
     function setLanguage(newLang) {
@@ -250,3 +250,5 @@
   </script>
 </body>
 </html>
+<!-- This is a simple golf score tracking app. It allows two players to keep track of their scores over a specified number of holes. The app provides real-time updates on the match status and displays the final results at the end of the game. The code is structured to be responsive and user-friendly, with a clean design and easy navigation. -->
+<!-- The app is built using HTML, CSS, and JavaScript, making it lightweight and accessible on various devices. The language can be switched between Finnish and English, enhancing usability for a wider audience. The game logic ensures that the scores are accurately recorded and displayed, providing a seamless experience for users. -->
