@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HoleWin – Reikäpeli</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f6f6f6;
+      color: #333;
+      margin: 0;
+      padding: 1em;
+      max-width: 600px;
+      margin: auto;
+      position: relative;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 0.7em;
+      margin-top: 0.5em;
+      font-size: 1em;
+    }
+    button {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1b5e20;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .hole-buttons button {
+      width: 30%;
+      margin: 0.3em;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 1em;
+    }
+    .logo-text {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #2e7d32;
+    }
+    .logo-text span {
+      color: #ff9800;
+    }
+    .lang-menu {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+    .lang-menu select {
+      padding: 4px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Kielivalinta -->
+  <div class="lang-menu">
+    <select id="language" onchange="setLanguage(this.value)">
+      <option value="fi">Suomi</option>
+      <option value="en">English</option>
+    </select>
+  </div>
+
+  <!-- Logo -->
+  <div class="logo">
+    <svg width="40" height="40" viewBox="0 0 100 100">
+      <line x1="20" y1="80" x2="60" y2="20" stroke="#388e3c" stroke-width="6" />
+      <rect x="55" y="15" width="10" height="5" fill="#388e3c" rx="1" />
+      <rect x="70" y="40" width="4" height="30" fill="#555" />
+      <circle cx="72" cy="38" r="8" fill="#ff9800" />
+      <line x1="64" y1="38" x2="80" y2="38" stroke="#555" stroke-width="2" />
+      <line x1="72" y1="38" x2="72" y2="70" stroke="#888" stroke-dasharray="2,2" />
+      <circle cx="30" cy="85" r="6" fill="black" opacity="0.4" />
+    </svg>
+    <div class="logo-text">Hole<span>Win</span></div>
+  </div>
+
+  <label id="labelA">Pelaaja A: <input id="playerA" required></label>
+  <label id="labelB">Pelaaja B: <input id="playerB" required></label>
+  <label id="labelHoles">Väyliä:
+    <select id="holes">
+      <option value="9">9</option>
+      <option value="18">18</option>
+    </select>
+  </label>
+  <button id="startButton" onclick="startGame()">Aloita peli</button>
+
+  <div id="game" style="display:none;">
+    <h2 id="holeHeader"></h2>
+    <div class="hole-buttons">
+      <button id="btnA" onclick="recordResult('A')"></button>
+      <button id="btnB" onclick="recordResult('B')"></button>
+      <button id="btnT" onclick="recordResult('T')"></button>
+    </div>
+    <p id="status"></p>
+  </div>
+
+  <div id="result" style="display:none;">
+    <h2 id="finalResult"></h2>
+    <ul id="details"></ul>
+    <label id="emailLabel">Sähköposti: <input id="email"></label>
+    <button id="sendBtn" onclick="sendEmail()">Lähetä tulos sähköpostiin</button>
+  </div>
+
+  <script>
+    const backendURL = "https://us-central1-holewin-b7608.cloudfunctions.net/sendMatchEmail";
+
+    let lang = 'fi';
+    const translations = {
+      fi: {
+        playerA: "Pelaaja A",
+        playerB: "Pelaaja B",
+        start: "Aloita peli",
+        holes: "Väyliä",
+        tie: "Tasapeli",
+        email: "Sähköposti",
+        send: "Lähetä tulos sähköpostiin",
+        hole: "Väylä",
+        result: "Tulokset",
+        draw: "Peli päättyi tasan",
+        leads: "johtaa",
+        won: "voitti",
+        holesLeft: "väylää jäljellä"
+      },
+      en: {
+        playerA: "Player A",
+        playerB: "Player B",
+        start: "Start Game",
+        holes: "Holes",
+        tie: "Tie",
+        email: "Email",
+        send: "Send results by email",
+        hole: "Hole",
+        result: "Results",
+        draw: "Match ended in a draw",
+        leads: "leads",
+        won: "won",
+        holesLeft: "holes left"
+      }
+    };
+
+    let scores = [], currentHole = 1, totalHoles = 9;
+    let playerA = "", playerB = "";
+
+    function setLanguage(newLang) {
+      lang = newLang;
+      const t = translations[lang];
+      document.getElementById("labelA").childNodes[0].nodeValue = t.playerA + ": ";
+      document.getElementById("labelB").childNodes[0].nodeValue = t.playerB + ": ";
+      document.getElementById("labelHoles").childNodes[0].nodeValue = t.holes + ": ";
+      document.getElementById("startButton").innerText = t.start;
+      document.getElementById("btnT").innerText = t.tie;
+      document.getElementById("emailLabel").childNodes[0].nodeValue = t.email + ": ";
+      document.getElementById("sendBtn").innerText = t.send;
+      updateHole();
+    }
+
+    function startGame() {
+      playerA = document.getElementById("playerA").value;
+      playerB = document.getElementById("playerB").value;
+      totalHoles = parseInt(document.getElementById("holes").value);
+      scores = [];
+      currentHole = 1;
+
+      document.getElementById("btnA").innerText = playerA;
+      document.getElementById("btnB").innerText = playerB;
+
+      document.getElementById("game").style.display = "block";
+      document.getElementById("result").style.display = "none";
+      updateHole();
+    }
+
+    function updateHole() {
+      const t = translations[lang];
+      document.getElementById("holeHeader").innerText = `${t.hole} ${currentHole}/${totalHoles}`;
+      document.getElementById("status").innerText = getMatchStatus();
+    }
+
+    function recordResult(winner) {
+      scores.push(winner);
+      if (currentHole >= totalHoles || isDecided()) {
+        showResult();
+      } else {
+        currentHole++;
+        updateHole();
+      }
+    }
+
+    function getMatchStatus() {
+      const t = translations[lang];
+      let a = 0, b = 0;
+      scores.forEach(s => {
+        if (s === 'A') a++;
+        else if (s === 'B') b++;
+      });
+      const lead = a - b;
+      if (lead > 0) return `${playerA} ${t.leads} ${lead} UP`;
+      if (lead < 0) return `${playerB} ${t.leads} ${-lead} UP`;
+      return t.draw;
+    }
+
+    function isDecided() {
+      let a = scores.filter(s => s === 'A').length;
+      let b = scores.filter(s => s === 'B').length;
+      const left = totalHoles - scores.length;
+      return Math.abs(a - b) > left;
+    }
+
+    function showResult() {
+      const t = translations[lang];
+      document.getElementById("game").style.display = "none";
+      document.getElementById("result").style.display = "block";
+
+      const a = scores.filter(s => s === 'A').length;
+      const b = scores.filter(s => s === 'B').length;
+      const left = totalHoles - scores.length;
+      let finalText = "";
+
+      if (a === b) finalText = t.draw;
+      else {
+        const winner = a > b ? playerA : playerB;
+        const diff = Math.abs(a - b);
+        finalText = `${winner} ${t.won} ${diff} & ${left}`;
+      }
+
+      document.getElementById("finalResult").innerText = finalText;
+
+      const list = document.getElementById("details");
+      list.innerHTML = "";
+      scores.forEach((s, i) => {
+        const text = s === 'T' ? translations[lang].tie : s === 'A' ? playerA : playerB;
+        list.innerHTML += `<li>${translations[lang].hole} ${i + 1}: ${text}</li>`;
+      });
+    }
+
+    function sendEmail() {
+      const toEmail = document.getElementById("email").value;
+      const resultText = document.getElementById("finalResult").innerText;
+      const holeDetails = scores.map((s, i) =>
+        `${translations[lang].hole} ${i + 1}: ${s === 'T' ? translations[lang].tie : s === 'A' ? playerA : playerB}`
+      ).join('\n');
+
+      fetch(backendURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to_email: toEmail,
+          player_a: playerA,
+          player_b: playerB,
+          result_text: resultText,
+          hole_details: holeDetails
+        })
+      })
+        .then(res => res.ok ? res.text() : Promise.reject("Email error"))
+        .then(msg => alert("✅ " + msg))
+        .catch(err => alert("❌ Lähetys epäonnistui: " + err));
+    }
+
+    // Aseta oletuskieli
+    setLanguage('fi');
+  </script>
+</body>
+</html>
