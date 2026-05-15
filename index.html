@@ -136,14 +136,16 @@
         tie: "Tasapeli",
         hole: "Väylä",
         result: "Tulokset",
-        draw: "Peli päättyi tasan",
+        draw: "Peli on tasan",
         leads: "johtaa",
         won: "voitti",
         holesLeft: "väylää jäljellä",
         margin: "väylän erolla",
         unplayed: "väylää jäi pelaamatta",
         suddenDeath: "äkkikuolemalla",
-        playoffHoles: "Jatkoväylää"
+        playoffHoles: "jatkoväylää",
+        points: "pisteellä",
+        gameResult: "Pelin tulos"
       },
       en: {
         playerA: "Player 1",
@@ -154,14 +156,16 @@
         tie: "Tie",
         hole: "Hole",
         result: "Results",
-        draw: "Match ended in a draw",
-        leads: "leads",
+        draw: "Match is even",
+        leads: "leads with",
         won: "won",
         holesLeft: "holes left",
         margin: "holes difference",
         unplayed: "unplayed holes",
         suddenDeath: "in sudden death",
-        playoffHoles: "Playoff holes"
+        playoffHoles: "playoff holes",
+        points: "points",
+        gameResult: "Game result"
       }
     };
 
@@ -226,8 +230,8 @@
         else if (s === 'B') b++;
       });
       const lead = a - b;
-      if (lead > 0) return `${playerA} ${t.leads} ${lead} UP`;
-      if (lead < 0) return `${playerB} ${t.leads} ${-lead} UP`;
+      if (lead > 0) return `${playerA} ${t.leads} ${lead} ${t.points}`;
+      if (lead < 0) return `${playerB} ${t.leads} ${-lead} ${t.points}`;
       return t.draw;
     }
 
@@ -252,7 +256,7 @@
       const b = scores.filter(s => s === 'B').length;
       const left = totalHoles - scores.length;
 
-      let finalText = `${t.course}: ${course} | ${t.holes}: ${totalHoles}${playoffHoles > 0 ? ` + ${playoffHoles} ${t.playoffHoles}` : ""}\n${playerA} vs ${playerB} ${a} – ${b}`;
+      let finalText = `${t.course}: ${course} | ${t.holes}: ${totalHoles}${playoffHoles > 0 ? ` + ${playoffHoles} ${t.playoffHoles}` : ""}\n${playerA} vs ${playerB}\n${t.gameResult} ${a} – ${b}`;
 
       if (a === b && scores.length <= totalHoles) {
         finalText += `\n ${t.draw}`;
