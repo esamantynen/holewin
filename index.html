@@ -100,6 +100,7 @@
 
   <label id="labelA">Pelaaja 1: <input id="playerA" required></label>
   <label id="labelB">Pelaaja 2: <input id="playerB" required></label>
+  <label id="labelCourse">Rata / course: <input id="course" type="text" placeholder="Esim. Tapiola Golf"></label>
   <label id="labelHoles">Väyliä:
     <select id="holes">
       <option value="9">9</option>
@@ -129,12 +130,14 @@
       fi: {
         playerA: "Pelaaja 1",
         playerB: "Pelaaja 2",
+        course: "Rata",
+        suddenDeath: "Äkkikuolema",
         start: "Aloita peli",
         holes: "Väyliä",
         tie: "Tasapeli",
         hole: "Väylä",
         result: "Tulokset",
-        draw: "Peli päättyi tasan",
+        draw: "Peli on tasan",
         leads: "johtaa",
         won: "voitti",
         holesLeft: "väylää jäljellä"
@@ -142,12 +145,14 @@
       en: {
         playerA: "Player 1",
         playerB: "Player 2",
+        course: "Course",
+        suddenDeath: "Sudden death",
         start: "Start Game",
         holes: "Holes",
         tie: "Tie",
         hole: "Hole",
         result: "Results",
-        draw: "Match ended in a draw",
+        draw: "Match is even",
         leads: "leads",
         won: "won",
         holesLeft: "holes left"
@@ -156,12 +161,15 @@
 
     let scores = [], currentHole = 1, totalHoles = 18;
     let playerA = "", playerB = "";
+    let course = "";
+  let suddenDeath = false;
 
     function setLanguage(newLang) {
       lang = newLang;
       const t = translations[lang];
       document.getElementById("labelA").childNodes[0].nodeValue = t.playerA + ": ";
       document.getElementById("labelB").childNodes[0].nodeValue = t.playerB + ": ";
+      document.getElementById("labelCourse").childNodes[0].nodeValue = t.course + ": ";
       document.getElementById("labelHoles").childNodes[0].nodeValue = t.holes + ": ";
       document.getElementById("startButton").innerText = t.start;
       document.getElementById("btnT").innerText = t.tie;
@@ -171,9 +179,11 @@
     function startGame() {
       playerA = document.getElementById("playerA").value;
       playerB = document.getElementById("playerB").value;
+      course = document.getElementById("course").value.trim();
       totalHoles = parseInt(document.getElementById("holes").value);
       scores = [];
       currentHole = 1;
+      suddenDeath = false;
 
       document.getElementById("btnA").innerText = playerA;
       document.getElementById("btnB").innerText = playerB;
@@ -185,13 +195,32 @@
 
     function updateHole() {
       const t = translations[lang];
-      document.getElementById("holeHeader").innerText = `${t.hole} ${currentHole}/${totalHoles}`;
+      const holeLabel = suddenDeath ? `${t.suddenDeath} ${currentHole - totalHoles}` : `${t.hole} ${currentHole}/${totalHoles}`;
+      document.getElementById("holeHeader").innerText = holeLabel;
       document.getElementById("status").innerText = getMatchStatus();
     }
 
     function recordResult(winner) {
       scores.push(winner);
-      if (currentHole >= totalHoles || isDecided()) {
+      if (suddenDeath) {
+        if (winner === 'T') {
+          currentHole++;
+          updateHole();
+        } else {
+          showResult();
+        }
+        return;
+      }
+
+      if (currentHole >= totalHoles) {
+        if (isTied()) {
+          suddenDeath = true;
+          currentHole++;
+          updateHole();
+        } else {
+          showResult();
+        }
+      } else if (isDecided()) {
         showResult();
       } else {
         currentHole++;
@@ -219,6 +248,12 @@
       return Math.abs(a - b) > left;
     }
 
+    function isTied() {
+      let a = scores.filter(s => s === 'A').length;
+      let b = scores.filter(s => s === 'B').length;
+      return a === b;
+    }
+
     function showResult() {
       const t = translations[lang];
       document.getElementById("game").style.display = "none";
@@ -228,9 +263,13 @@
       const b = scores.filter(s => s === 'B').length;
       const left = totalHoles - scores.length;
       
-      let finalText = `${playerA} vs ${playerB} ${a}–${b}`;
+      const courseText = course ? ` (@ ${course})` : "";
+      let finalText = `${playerA} vs ${playerB}${courseText} ${a}–${b}`;
 
-        if (a === b) {
+        if (suddenDeath) {
+          const winner = scores[scores.length - 1] === 'A' ? playerA : playerB;
+          finalText += ` – ${winner} ${t.won} ${t.suddenDeath}`;
+        } else if (a === b) {
           finalText += ` – ${t.draw}`;
         } else {
           const winner = a > b ? playerA : playerB;
